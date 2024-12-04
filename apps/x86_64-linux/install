@@ -23,10 +23,20 @@ success "Running in the NixOS installer environment."
 # Check if the nixos-config repository already exists
 if [ -d nixos-config ]; then
   success "Repository already exists. Resetting and cleaning..."
-  cd nixos-config && git fetch --all && git reset --hard && git clean -dfx || error "Failed to fetch, reset, and clean the repository."
+  cd nixos-config || error "Failed to change directory to nixos-config."
+  success "Changed directory to nixos-config."
+  git fetch --all || error "Failed to fetch the repository."
+  success "Fetched all updates from the repository."
+  git reset --hard || error "Failed to reset the repository."
+  success "Repository reset to the latest commit."
+  git clean -dfx || error "Failed to clean the repository."
+  success "Repository cleaned of untracked files."
 else
   # Clone the repository if it does not exist
-  git clone https://github.com/andreszb/nixos-config.git && cd nixos-config || error "Failed to clone the repository."
+  git clone https://github.com/andreszb/nixos-config.git || error "Failed to clone the repository."
+  success "Repository cloned successfully."
+  cd nixos-config || error "Failed to change directory to nixos-config."
+  success "Changed directory to nixos-config."
 fi
 
 # Print the current directory
