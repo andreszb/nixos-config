@@ -23,7 +23,7 @@ success "Running in the NixOS installer environment."
 # Check if the nixos-config repository already exists
 if [ -d nixos-config ]; then
   success "Repository already exists. Resetting and cleaning..."
-  cd nixos-config && git reset --hard && git clean -dfx || error "Failed to reset and clean the repository."
+  cd nixos-config && git fetch --all && git reset --hard && git clean -dfx || error "Failed to fetch, reset, and clean the repository."
 else
   # Clone the repository if it does not exist
   git clone https://github.com/andreszb/nixos-config.git && cd nixos-config || error "Failed to clone the repository."
