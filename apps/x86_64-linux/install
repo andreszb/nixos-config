@@ -1,57 +1,66 @@
 #!/usr/bin/env bash
-set -exu
+set -eu
 
-check_installer() {
-  if [ -e /etc/NIXOS ]; then
-    echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
-  else
-    echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
-    exit 1
-  fi
+# Function to print error messages and exit
+error() {
+  echo -e "\e[1;31m$1\e[0m" >&2
+  exit 1
 }
 
-run_disko() {
-  git clone https://github.com/andreszb/nixos-config.git
-  cd nixos-config
-  sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+# Function to print success messages
+success() {
+  echo -e "\e[1;32m$1\e[0m"
 }
 
-setup_files() {
-  sudo mkdir -p /mnt/etc/nixos
-  sudo cp -r * /mnt/etc/nixos
-  cd /mnt/etc/nixos
-}
+# Check if running in the NixOS installer environment
+[ -e /etc/NIXOS ] || error "Not running in the NixOS installer environment."
 
-install_nixos() {
+success "Running in the NixOS installer environment."
 
-  sudo nixos-generate-config --no-filesystems --root /mnt
-  ARCH=$(uname -m)
+# Check for root privileges
+[ "$(id -u)" -eq 0 ] || error "This script must be run as root."
 
-  case "$ARCH" in
-    x86_64)
-      FLAKE_TARGET="x86_64-linux"
-      ;;
-    *)
-      echo -e "${RED}Unsupported architecture: $ARCH${CLEAR}"
-      exit 1
-      ;;
-  esac
+# Check if the nixos-config repository already exists
+if [ -d nixos-config ]; then
+  success "Repository already exists. Resetting and cleaning..."
+  cd nixos-config && git reset --hard && git clean -dfx || error "Failed to reset and clean the repository."
+else
+  # Clone the repository if it does not exist
+  git clone https://github.com/andreszb/nixos-config.git && cd nixos-config || error "Failed to clone the repository."
+fi
 
-  sudo nixos-install --flake .#$FLAKE_TARGET $@
-  sudo chmod -R 775 /mnt/etc/nixos
-}
+# Run disko to format and mount the disk
+sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+  github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix || error "Disko operation failed."
 
-prompt_reboot() {
-  read -p "Do you want to reboot now? (y/yes) " choice
-  case "$choice" in
-  y|Y|yes|YES ) echo -e "\e[1;32mRebooting...\e[0m" && sudo reboot;;
-  * ) echo -e "\e[1;33mReboot skipped.\e[0m";;
-  esac
-}
+# Setup the configuration files
+sudo mkdir -p /mnt/etc/nixos && sudo cp -r * /mnt/etc/nixos || error "Failed to copy configuration files to /mnt/etc/nixos."
+cd /mnt/etc/nixos || error "Failed to change directory to /mnt/etc/nixos."
 
-check_installer
-run_disko
-setup_files
-install_nixos
-prompt_reboot
+# Install NixOS
+ARCH=$(uname -m)
+
+case "$ARCH" in
+  x86_64)
+    FLAKE_TARGET="x86_64-linux"
+    ;;
+  *)
+    error "Unsupported architecture: $ARCH"
+    ;;
+esac
+
+sudo nixos-generate-config --no-filesystems --root /mnt --show-hardware-config > /mnt/etc/nixos/hardware-configuration.nix || error "Failed to generate NixOS configuration."
+sudo nixos-install --flake .#$FLAKE_TARGET "$@" || error "NixOS installation failed."
+sudo chmod -R 775 /mnt/etc/nixos || error "Failed to set permissions for /mnt/etc/nixos."
+
+# Prompt for reboot
+read -p "Do you want to reboot now? (y/yes) " choice
+case "$choice" in
+  y|Y|yes|YES )
+    success "Rebooting..."
+    sudo reboot
+    ;;
+  * )
+    echo -e "\e[1;33mReboot skipped.\e[0m"
+    ;;
+esac
