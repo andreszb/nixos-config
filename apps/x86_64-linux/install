@@ -29,6 +29,9 @@ else
   git clone https://github.com/andreszb/nixos-config.git && cd nixos-config || error "Failed to clone the repository."
 fi
 
+# Print the current directory
+echo "Current directory: $(pwd)"
+
 # Run disko to format and mount the disk
 sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
   github:nix-community/disko -- --mode zap_create_mount ./hosts/nixos/disk-config.nix || error "Disko operation failed."
