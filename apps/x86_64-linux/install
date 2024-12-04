@@ -30,7 +30,7 @@ else
 fi
 
 # Print the current directory
-echo "Current directory: $(pwd)"
+success "Current directory: $(pwd)"
 
 # Run disko to format and mount the disk
 sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
