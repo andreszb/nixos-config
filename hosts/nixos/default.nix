@@ -4,7 +4,7 @@ let user = "andreszb"; in
 {
   imports = [
     ../../modules/nixos/disk-config.nix
-    ../../modules/shared
+    ../../modules/common
     ../../hardware-configuration.nix
   ];
 
