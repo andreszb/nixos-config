@@ -73,6 +73,7 @@ read -p "Do you want to reboot now? (y/yes) " choice
 case "$choice" in
   y|Y|yes|YES )
     success "Rebooting..."
+    sudo ln -sfn /home/andreszb/nixos-config /etc/nixos
     sudo reboot
     ;;
   * )
