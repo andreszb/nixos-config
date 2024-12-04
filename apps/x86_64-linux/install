@@ -34,7 +34,9 @@ sudo nix run --extra-experimental-features nix-command --extra-experimental-feat
   github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix || error "Disko operation failed."
 
 # Setup the configuration files
-sudo mkdir -p /mnt/etc/nixos && sudo cp -r * /mnt/etc/nixos || error "Failed to copy configuration files to /mnt/etc/nixos."
+USER_HOME="/mnt/home/andreszb"
+sudo mkdir -p "$USER_HOME/nixos-config" && sudo cp -r * "$USER_HOME/nixos-config" || error "Failed to copy configuration files to $USER_HOME/nixos-config."
+sudo ln -sfn "$USER_HOME/nixos-config" /mnt/etc/nixos || error "Failed to link configuration files to /mnt/etc/nixos."
 cd /mnt/etc/nixos || error "Failed to change directory to /mnt/etc/nixos."
 
 # Install NixOS

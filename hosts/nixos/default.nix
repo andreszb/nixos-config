@@ -3,9 +3,10 @@
 let user = "andreszb"; in
 {
   imports = [
-    ../../modules/nixos/disk-config.nix
+    ./disk-config.nix
     ../../modules/common
     ../../hardware-configuration.nix
+    # inputs.hardware.nixosModules.asus-zephyrus-gu603h
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -55,6 +56,8 @@ let user = "andreszb"; in
 
     # My shell
     zsh.enable = true;
+
+    nix-ld.enable = true;
   };
 
   # Enable the X11 windowing system.
@@ -70,9 +73,14 @@ let user = "andreszb"; in
     variant = "";
   };
 
+  services.openssh = {
+    enable = true;
+    settings.PermitRootLogin = "yes";
+  };
+
   # Video support
   hardware = {
-    opengl.enable = true;
+    graphics.enable = true;
     # pulseaudio.enable = true;
     # hardware.nvidia.modesetting.enable = true;
   };
@@ -85,6 +93,7 @@ let user = "andreszb"; in
         "wheel" # Enable ‘sudo’ for the user.
       ];
     };
+    root.shell = pkgs.bash;
   };
 
   environment.systemPackages = with pkgs; [

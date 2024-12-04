@@ -2,14 +2,26 @@
   description = "Starter Configuration for NixOS";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    # Declarative partitioning and formatting
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    hardware.url = "github:nixos/nixos-hardware";
+    home-manager = {
+      url = "github:nix-community/home-manager/release-24.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    # Secrets management. See ./docs/secretsmgmt.md
+    sops-nix = {
+      url = "github:mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, home-manager, nixpkgs, disko } @inputs:
+  outputs = { self, home-manager, nixpkgs, disko, ... } @inputs:
     let
       user = "andreszb";
       linuxSystems = [ "x86_64-linux" ];
