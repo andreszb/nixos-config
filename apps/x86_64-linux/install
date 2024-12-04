@@ -11,7 +11,7 @@ check_installer() {
 }
 
 run_disko() {
-  git clone git@github.com:andreszb/nixos-config.git
+  git clone https://github.com/andreszb/nixos-config-first.git
   cd nixos-config
   sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
     github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
