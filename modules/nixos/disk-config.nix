@@ -22,13 +22,12 @@
               content = {
                 type = "luks";
                 name = "crypted";
-                # disable settings.keyFile if you want to use interactive password entry
-                passwordFile = "/tmp/secret.key"; # Interactive
+                # Remove passwordFile and keyFile for interactive password entry
                 settings = {
                   allowDiscards = true;
-                  # keyFile = "/tmp/secret.key";
+                  # keyFile = "/tmp/secret.key"; # Commented out for interactive entry
                 };
-                additionalKeyFiles = [ "/tmp/additionalSecret.key" ];
+                # Remove additionalKeyFiles for interactive password entry
                 content = {
                   type = "btrfs";
                   extraArgs = [ "-f" ];
