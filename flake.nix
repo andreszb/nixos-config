@@ -1,8 +1,8 @@
 {
-  description = "General Purpose Configuration for macOS and NixOS";
+  description = "Starter Configuration for MacOS and NixOS";
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    agenix.url = "github:ryantm/agenix";
     home-manager.url = "github:nix-community/home-manager";
     darwin = {
       url = "github:LnL7/nix-darwin/master";
@@ -22,25 +22,22 @@
     homebrew-cask = {
       url = "github:homebrew/homebrew-cask";
       flake = false;
-    }; 
+    };
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    secrets = {
-      url = "git+ssh://git@github.com/dustinlyons/nix-secrets.git";
-      flake = false;
-    };
   };
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, agenix, secrets } @inputs:
+
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko } @inputs:
     let
-      user = "dustin";
-      linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
-      darwinSystems = [ "aarch64-darwin" "x86_64-darwin" ];
+      user = "andreszb";
+      linuxSystems = [ "x86_64-linux" ];
+      darwinSystems = [ "aarch64-darwin" ];
       forAllSystems = f: nixpkgs.lib.genAttrs (linuxSystems ++ darwinSystems) f;
       devShell = system: let pkgs = nixpkgs.legacyPackages.${system}; in {
         default = with pkgs; mkShell {
-          nativeBuildInputs = with pkgs; [ bashInteractive git age age-plugin-yubikey ];
+          nativeBuildInputs = with pkgs; [ bashInteractive git ];
           shellHook = with pkgs; ''
             export EDITOR=vim
           '';
@@ -56,38 +53,22 @@
         '')}/bin/${scriptName}";
       };
       mkLinuxApps = system: {
-        "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
-        "copy-keys" = mkApp "copy-keys" system;
-        "create-keys" = mkApp "create-keys" system;
-        "check-keys" = mkApp "check-keys" system;
         "install" = mkApp "install" system;
-        "install-with-secrets" = mkApp "install-with-secrets" system;
       };
       mkDarwinApps = system: {
-        "apply" = mkApp "apply" system;
         "build" = mkApp "build" system;
         "build-switch" = mkApp "build-switch" system;
-        "copy-keys" = mkApp "copy-keys" system;
-        "create-keys" = mkApp "create-keys" system;
-        "check-keys" = mkApp "check-keys" system;
         "rollback" = mkApp "rollback" system;
       };
     in
     {
-      templates = {
-        starter = {
-          path = ./templates/starter;
-          description = "Starter configuration";
-        };
-        starter-with-secrets = {
-          path = ./templates/starter-with-secrets;
-          description = "Starter configuration with secrets";
-        };
-      };
       devShells = forAllSystems devShell;
       apps = nixpkgs.lib.genAttrs linuxSystems mkLinuxApps // nixpkgs.lib.genAttrs darwinSystems mkDarwinApps;
-      darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system:
+
+      darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system: let
+        user = "andreszb";
+      in
         darwin.lib.darwinSystem {
           inherit system;
           specialArgs = inputs;
@@ -111,22 +92,21 @@
           ];
         }
       );
-      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system:
-        nixpkgs.lib.nixosSystem {
-          inherit system;
-          specialArgs = inputs;
-          modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/nixos/home-manager.nix;
-              };
-            }
-            ./hosts/nixos
-          ];
-        }
-      );
-    };
+
+      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = inputs;
+        modules = [
+          disko.nixosModules.disko
+          # home-manager.nixosModules.home-manager {
+          #   home-manager = {
+          #     useGlobalPkgs = true;
+          #     useUserPackages = true;
+          #     users.${user} = import ./modules/nixos/home-manager.nix;
+          #   };
+          # }
+          ./hosts/nixos
+        ];
+     });
+  };
 }
