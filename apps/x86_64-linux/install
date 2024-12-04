@@ -49,7 +49,7 @@ sudo nix run --extra-experimental-features nix-command --extra-experimental-feat
 # Setup the configuration files
 USER_HOME="/mnt/home/andreszb"
 sudo mkdir -p "$USER_HOME/nixos-config" && sudo cp -r * "$USER_HOME/nixos-config" || error "Failed to copy configuration files to $USER_HOME/nixos-config."
-sudo mkdir -p /mnt/etc/nixos && sudo ln -sfn "$USER_HOME/nixos-config" /mnt/etc/nixos || error "Failed to link configuration files to /mnt/etc/nixos."
+sudo mkdir -p /mnt/etc/nixos && sudo ln -sfn "$USER_HOME/nixos-config/" /mnt/etc/nixos/ || error "Failed to link configuration files to /mnt/etc/nixos."
 cd /mnt/etc/nixos || error "Failed to change directory to /mnt/etc/nixos."
 
 # Install NixOS
