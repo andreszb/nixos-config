@@ -31,7 +31,7 @@ fi
 
 # Run disko to format and mount the disk
 sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-  github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix || error "Disko operation failed."
+  github:nix-community/disko -- --mode zap_create_mount ./hosts/nixos/disk-config.nix || error "Disko operation failed."
 
 # Setup the configuration files
 USER_HOME="/mnt/home/andreszb"
