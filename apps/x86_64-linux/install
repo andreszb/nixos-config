@@ -54,7 +54,7 @@ exe "install NixOS" sudo nixos-install --flake .#$FLAKE_TARGET "$@"
 exe "set permissions for /mnt/etc/nixos" sudo chmod -R 775 /mnt/etc/nixos
 
 # Prompt for reboot
-# exe "link configuration files to /etc/nixos" sudo ln -sfn /home/andreszb/nixos-config /etc/nixos
+exe "link configuration files to /etc/nixos" sudo ln -sfn /home/andreszb/nixos-config /mnt/etc/nixos
 read -p "Do you want to reboot now? (y/yes) " choice
 case "$choice" in
   y|Y|yes|YES )
