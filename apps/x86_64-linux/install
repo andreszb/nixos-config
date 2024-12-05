@@ -12,45 +12,29 @@ success() {
   echo -e "\e[1;32m$1\e[0m"
 }
 
-# Check if running in the NixOS installer environment
-[ -e /etc/NIXOS ] || error "Not running in the NixOS installer environment."
+exe() {
+  local message=$1
+  shift
+  "$@" && success "Success: $message" || error "Failed to $message."
+}
 
-success "Running in the NixOS installer environment."
+# Check if running in the NixOS installer environment
+exe "check NixOS installer environment" [ -e /etc/NIXOS ]
 
 # Check for root privileges
-[ "$(id -u)" -eq 0 ] || error "This script must be run as root."
+exe "check root privileges" [ "$(id -u)" -eq 0 ]
 
-# Check if the nixos-config repository already exists
-if [ -d nixos-config ]; then
-  success "Repository already exists. Resetting and cleaning..."
-  cd nixos-config || error "Failed to change directory to nixos-config."
-  success "Changed directory to nixos-config."
-  git fetch --all || error "Failed to fetch the repository."
-  success "Fetched all updates from the repository."
-  git reset --hard || error "Failed to reset the repository."
-  success "Repository reset to the latest commit."
-  git clean -dfx || error "Failed to clean the repository."
-  success "Repository cleaned of untracked files."
-else
-  # Clone the repository if it does not exist
-  git clone https://github.com/andreszb/nixos-config.git || error "Failed to clone the repository."
-  success "Repository cloned successfully."
-  cd nixos-config || error "Failed to change directory to nixos-config."
-  success "Changed directory to nixos-config."
-fi
-
-# Print the current directory
-success "Current directory: $(pwd)"
+# Download the disk-config.nix file from the repository
+exe "download disk-config.nix" curl -o ./disk-config.nix https://raw.githubusercontent.com/andreszb/nixos-config/main/hosts/nixos/disk-config.nix
 
 # Run disko to format and mount the disk
-sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-  github:nix-community/disko -- --mode zap_create_mount ./hosts/nixos/disk-config.nix || error "Disko operation failed."
+exe "run disko" sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes github:nix-community/disko -- --mode zap_create_mount ./disk-config.nix
 
-# Setup the configuration files
-USER_HOME="/mnt/home/andreszb"
-sudo mkdir -p "$USER_HOME/nixos-config" && sudo cp -r * "$USER_HOME/nixos-config" || error "Failed to copy configuration files to $USER_HOME/nixos-config."
-sudo mkdir -p /mnt/etc && sudo ln -sfn "$USER_HOME/nixos-config" /mnt/etc/nixos || error "Failed to link configuration files to /mnt/etc/nixos."
-cd /mnt/etc/nixos || error "Failed to change directory to /mnt/etc/nixos."
+USER_HOME="home/andreszb"
+exe "create user home directory" sudo mkdir -p "/mnt/$USER_HOME"
+exe "clone the repository" git clone https://github.com/andreszb/nixos-config.git "/mnt/$USER_HOME/nixos-config"
+exe "link configuration files" sudo mkdir -p /mnt/etc && sudo ln -sfn "$USER_HOME/nixos-config" /mnt/etc/nixos
+exe "change directory to /mnt/etc/nixos" cd /mnt/etc/nixos
 
 # Install NixOS
 ARCH=$(uname -m)
@@ -64,16 +48,16 @@ case "$ARCH" in
     ;;
 esac
 
-sudo nixos-generate-config --no-filesystems --root /mnt --show-hardware-config > /mnt/etc/nixos/hardware-configuration.nix || error "Failed to generate NixOS configuration."
-sudo nixos-install --flake .#$FLAKE_TARGET "$@" || error "NixOS installation failed."
-sudo chmod -R 775 /mnt/etc/nixos || error "Failed to set permissions for /mnt/etc/nixos."
+exe "generate NixOS configuration" sudo nixos-generate-config --no-filesystems --root /mnt --show-hardware-config > /mnt/etc/nixos/hardware-configuration.nix
+exe "install NixOS" sudo nixos-install --flake .#$FLAKE_TARGET "$@"
+exe "set permissions for /mnt/etc/nixos" sudo chmod -R 775 /mnt/etc/nixos
 
 # Prompt for reboot
+exe "link configuration files to /etc/nixos" sudo ln -sfn /home/andreszb/nixos-config /etc/nixos
 read -p "Do you want to reboot now? (y/yes) " choice
 case "$choice" in
   y|Y|yes|YES )
     success "Rebooting..."
-    sudo ln -sfn /home/andreszb/nixos-config /etc/nixos
     sudo reboot
     ;;
   * )
