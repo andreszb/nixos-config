@@ -48,7 +48,7 @@ case "$ARCH" in
     ;;
 esac
 
-exe "generate NixOS configuration" sudo nixos-generate-config --no-filesystems --root /mnt --show-hardware-config > ./hardware-configuration.nix
+sudo nixos-generate-config --no-filesystems --root /mnt --show-hardware-config > ./hardware-configuration.nix
 exe "git add hardware config" git add ./hardware-configuration.nix
 exe "install NixOS" sudo nixos-install --flake .#$FLAKE_TARGET "$@"
 exe "set permissions for /mnt/etc/nixos" sudo chmod -R 775 /mnt/etc/nixos
