@@ -33,7 +33,7 @@ exe "run disko" sudo nix run --extra-experimental-features nix-command --extra-e
 USER_HOME="home/andreszb"
 exe "create user home directory" sudo mkdir -p "/mnt/$USER_HOME"
 exe "clone the repository" git clone https://github.com/andreszb/nixos-config.git "/mnt/$USER_HOME/nixos-config"
-exe "link configuration files" sudo mkdir -p /mnt/etc && sudo ln -sfn "$USER_HOME/nixos-config" /mnt/etc/nixos
+exe "link configuration files" sudo mkdir -p /mnt/etc && sudo ln -sfn "/mnt/$USER_HOME/nixos-config" /mnt/etc/nixos
 exe "change directory to /mnt/etc/nixos" cd /mnt/etc/nixos
 
 # Install NixOS
@@ -53,7 +53,7 @@ exe "install NixOS" sudo nixos-install --flake .#$FLAKE_TARGET "$@"
 exe "set permissions for /mnt/etc/nixos" sudo chmod -R 775 /mnt/etc/nixos
 
 # Prompt for reboot
-exe "link configuration files to /etc/nixos" sudo ln -sfn /home/andreszb/nixos-config /etc/nixos
+# exe "link configuration files to /etc/nixos" sudo ln -sfn /home/andreszb/nixos-config /etc/nixos
 read -p "Do you want to reboot now? (y/yes) " choice
 case "$choice" in
   y|Y|yes|YES )
